@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { TodosStore } from './store/todos.store';
 import { TodosList } from './todos-list/todos-list';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -10,20 +10,20 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
-export class App implements OnInit {
+export class App {
   store = inject(TodosStore);
   
-  ngOnInit(): void {
-    this.loadTodos()
-      .then(() => {
-        console.log('Todos loaded');
-      })
-      .catch((error) => {
-        console.error('Error loading todos:', error);
-      });
-  }
+  // ngOnInit(): void {
+  //   this.loadTodos()
+  //     .then(() => {
+  //       console.log('Todos loaded');
+  //     })
+  //     .catch((error) => {
+  //       console.error('Error loading todos:', error);
+  //     });
+  // }
 
-  async loadTodos() {
-    await this.store.loadAll();
-  }
+  // async loadTodos() {
+  //   await this.store.loadAll();
+  // }
 }

@@ -1,5 +1,5 @@
 import { Todo } from "../model/todo.model";
-import { signalStore, withState, withMethods, patchState, withComputed } from "@ngrx/signals";
+import { signalStore, withState, withMethods, patchState, withComputed, withHooks, withProps } from "@ngrx/signals";
 import { TodosService } from "../services/todos.service";
 import { inject } from "@angular/core";
 import { computed } from "@angular/core";
@@ -34,27 +34,31 @@ export const TodosStore = signalStore(
             }
         })
     })),
+    //Used to inject services and other dependencies for the store to use
+    withProps(() => ({
+        todosService: inject(TodosService)
+    })),
     withMethods(
-        (store, todosService = inject(TodosService)) => ({
+        (store) => ({
           async loadAll() {
             patchState(store, { loading: true });
-            const todos = await todosService.getTodos();
+            const todos = await store.todosService.getTodos();
             patchState(store, { todos, loading: false });
           },  
           async addTodo(title: string) {
-            const todo = await todosService.addTodo({ title, completed: false });
+            const todo = await store.todosService.addTodo({ title, completed: false });
             patchState(store, (state) => ({
               todos: [...state.todos, todo]
             }));
           },
           async deleteTodo(id: number) {
-            await todosService.deleteTodo(id);
+            await store.todosService.deleteTodo(id);
             patchState(store, (state) => ({
               todos: state.todos.filter(todo => todo.id !== id)
             }));
           },
           async updateTodo(id: number, completed: boolean) {
-            await todosService.updateTodo(id, completed);
+            await store.todosService.updateTodo(id, completed);
             patchState(store, (state) => ({
               todos: state.todos.map(todo => 
                 todo.id === id ? { ...todo, completed } : todo)
@@ -64,5 +68,14 @@ export const TodosStore = signalStore(
             patchState(store, { filter });
           }
         })
-    )
+    ),
+    withHooks((store) => ({
+      onInit: () => {
+        store.loadAll();
+      },
+      //Useful for component level stores as clean-up
+      onDestroy: () => {
+        // No cleanup needed for this store as it is global
+      }
+    }))
 )
