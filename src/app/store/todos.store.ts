@@ -1,5 +1,12 @@
 import { Todo } from "../model/todo.model";
 import { signalStore, withState, withMethods, patchState, withComputed, withHooks, withProps } from "@ngrx/signals";
+import {
+  addEntity,
+  removeEntity,
+  setAllEntities,
+  updateEntity,
+  withEntities,
+} from '@ngrx/signals/entities';
 import { TodosService } from "../services/todos.service";
 import { inject } from "@angular/core";
 import { computed } from "@angular/core";
@@ -7,13 +14,11 @@ import { computed } from "@angular/core";
 export type TodosFilter = 'all' | 'pending' | 'completed';
 
 export type TodosState = {
-    todos: Todo[];
     loading: boolean;
     filter: TodosFilter;
 }
 
 const initialState: TodosState = {
-    todos: [],
     loading: false,
     filter: 'all'
 }
@@ -21,14 +26,16 @@ const initialState: TodosState = {
 export const TodosStore = signalStore(
     {providedIn: 'root'},
     withState(initialState),
+    //Using withEntities to manage the collection of todos in the store
+    withEntities<Todo>(),
     //Used to inject services and other dependencies for the store to use
     withProps(() => ({
         todosService: inject(TodosService)
     })),
-    withComputed((state) => ({
-        filteredTodo: computed(() => {
-            const todos = state.todos();
-            switch (state.filter()) {
+    withComputed((store) => ({
+        filteredTodos: computed(() => {
+            const todos = store.entities();
+            switch (store.filter()) {
                 case 'all':
                     return todos;
                 case 'pending':
@@ -43,26 +50,33 @@ export const TodosStore = signalStore(
           async loadAll() {
             patchState(store, { loading: true });
             const todos = await store.todosService.getTodos();
-            patchState(store, { todos, loading: false });
+            patchState(
+              store,
+              setAllEntities(todos),
+              { loading: false }
+            );
           },  
           async addTodo(title: string) {
             const todo = await store.todosService.addTodo({ title, completed: false });
-            patchState(store, (state) => ({
-              todos: [...state.todos, todo]
-            }));
+            patchState(store, addEntity(todo));
           },
           async deleteTodo(id: number) {
             await store.todosService.deleteTodo(id);
-            patchState(store, (state) => ({
-              todos: state.todos.filter(todo => todo.id !== id)
-            }));
+            patchState(store, removeEntity(id));
           },
           async updateTodo(id: number, completed: boolean) {
             await store.todosService.updateTodo(id, completed);
-            patchState(store, (state) => ({
-              todos: state.todos.map(todo => 
-                todo.id === id ? { ...todo, completed } : todo)
-            }));
+            patchState(
+              store, 
+              updateEntity(
+                {
+                  id,
+                  changes: {
+                    completed
+                  }
+                }
+              )
+            );
           },
           updateFilter(filter: TodosFilter) {
             patchState(store, { filter });

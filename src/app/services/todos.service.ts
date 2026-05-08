@@ -14,7 +14,7 @@ export class TodosService {
   async addTodo(todo: Partial<Todo>) {
     await sleep(1000);
     return {
-      id: Math.random().toString(36).substring(2, 9),
+      id: Date.now(),
       ...todo,
     } as Todo;
   }

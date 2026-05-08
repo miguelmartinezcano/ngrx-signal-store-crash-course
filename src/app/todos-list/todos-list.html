@@ -13,7 +13,7 @@
 </mat-button-toggle-group>  
 
 <mat-selection-list class="todos-list">
-    @for (todo of store.filteredTodo(); track todo.id; let index = $index) {
+    @for (todo of store.filteredTodos(); track todo.id) {
         <mat-list-option [selected]="todo.completed" (selectedChange)="onTodoToggled(todo.id, $event)">
             <div class="todo-item">
                 <mat-icon class="delete-todo" (click)="onDeleteTodo(todo.id, $event)">delete</mat-icon>
