@@ -21,6 +21,10 @@ const initialState: TodosState = {
 export const TodosStore = signalStore(
     {providedIn: 'root'},
     withState(initialState),
+    //Used to inject services and other dependencies for the store to use
+    withProps(() => ({
+        todosService: inject(TodosService)
+    })),
     withComputed((state) => ({
         filteredTodo: computed(() => {
             const todos = state.todos();
@@ -33,10 +37,6 @@ export const TodosStore = signalStore(
                     return todos.filter(todo => todo.completed);
             }
         })
-    })),
-    //Used to inject services and other dependencies for the store to use
-    withProps(() => ({
-        todosService: inject(TodosService)
     })),
     withMethods(
         (store) => ({
